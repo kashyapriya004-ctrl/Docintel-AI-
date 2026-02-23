@@ -2,7 +2,8 @@ import os
 import numpy as np
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Let OpenAI automatically read OPENAI_API_KEY from environment
+client = OpenAI()
 
 def create_embeddings(chunks):
     embeddings = []
