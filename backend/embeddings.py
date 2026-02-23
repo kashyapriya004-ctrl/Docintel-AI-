@@ -1,13 +1,32 @@
-from sentence_transformers import SentenceTransformer
+import os
 import numpy as np
+from openai import OpenAI
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def create_embeddings(chunks):
-    return model.encode(chunks)
+    embeddings = []
+    for chunk in chunks:
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=chunk
+        )
+        embeddings.append(response.data[0].embedding)
+    return embeddings
 
-def semantic_search(query, chunks, embeddings, top_k=3):
-    query_vec = model.encode([query])[0]
-    scores = np.dot(embeddings, query_vec)
-    top_indices = scores.argsort()[-top_k:][::-1]
+
+def semantic_search(query, chunks, embeddings):
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=query
+    )
+
+    query_embedding = response.data[0].embedding
+
+    similarities = []
+    for emb in embeddings:
+        similarity = np.dot(query_embedding, emb)
+        similarities.append(similarity)
+
+    top_indices = np.argsort(similarities)[-3:][::-1]
     return [chunks[i] for i in top_indices]
