@@ -8,10 +8,7 @@ def chunk_text(text, chunk_size=500, overlap=50):
         start = end - overlap
 
     return chunks
-
-
-
-
+    
 # def chunk_text(text, chunk_size=800, overlap=100):
 #     chunks = []
 #     start = 0

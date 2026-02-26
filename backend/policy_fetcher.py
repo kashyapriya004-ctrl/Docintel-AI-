@@ -1,16 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
-from pypdf import PdfReader
-import io
 
-# ----------- Cleaning ----------
+
 def clean_text(text):
     lines = text.split("\n")
     clean_lines = []
 
     blacklist_keywords = [
-        "Follow Us", "Twitter", "Facebook", "Instagram",
-        "LinkedIn", "Skip to", "Screen Reader",
+        "Follow Us", "Twitter", "Facebook",
+        "Instagram", "LinkedIn",
+        "Skip to", "Screen Reader",
         "Text Size", "Contact Us"
     ]
 
@@ -25,42 +24,13 @@ def clean_text(text):
     return "\n".join(clean_lines)
 
 
-# ----------- Official Sources ----------
 OFFICIAL_SOURCES = {
-    "AICTE_About": "https://www.aicte-india.org/about-us",
-    "AICTE_Schemes": "https://www.aicte-india.org/schemes",
-    "AICTE_Approval": "https://www.aicte-india.org/approval-process-handbook",
-
-    "UGC_About": "https://www.ugc.gov.in/page/About-UGC.aspx",
-    "UGC_Schemes": "https://www.ugc.gov.in/page/Schemes.aspx",
-
-    "MOE_About": "https://www.education.gov.in/en/about-ministry"
-
-    "AICTE_Approval_24_27": "https://cdnbbsr.s3waas.gov.in/s35938b4d054136e5d59ada6ec9c295d7a/uploads/2025/03/2025031399.pdf",
-    "AICTE_Approval_23_24": "https://aiktc.ndl.gov.in/items/ea215e5b-5d31-4942-a4b7-391310f7e153",
-    "AICTE_Approval_22_23": "https://rknec.edu/Registrar/AICTE%20APPROVALS/AICTE-Approval%20Process%20Handbook%202022-23.pdf",
-    "UGC_Guidelines_Dev_Assist": "https://www.ugc.gov.in/oldpdf/xiplanpdf/universitesdevelopmentassitanceoctober.pdf",
-    "UGC_Regulations_Draft_25": "https://www.pcla.co.in/images/2025/Draft_UGC_Regulations_2025.pdf",
-    "UGC_Regulations_18": "https://nluo.ac.in/storage/2024/05/UGC-Regulations-2018-for-appointment-of-teachers-and-academic-staff.pdf",
+    "UGC": "https://www.ugc.gov.in/",
+    "AICTE": "https://www.aicte-india.org/",
+    "MOE": "https://www.education.gov.in/"
 }
 
 
-# ----------- Online PDF Links ----------
-PDF_URLS = [
-    "https://www.education.gov.in/sites/upload_files/mhrd/files/NEP_Final_English_0.pdf"
-    "NEP_2020": "https://www.education.gov.in/sites/upload_files/mhrd/files/NEP_Final_English_0.pdf",
-
-    # AICTE Approval Handbook
-    "AICTE_Approval_Handbook": "https://cdnbbsr.s3waas.gov.in/s35938b4d054136e5d59ada6ec9c295d7a/uploads/2025/03/2025031399.pdf",
-
-    #  UGC Student Support
-    "UGC_Student_Support": "https://www.ugc.ac.in/pdfnews/9118819_Students-Support.pdf",
-
-    # UGC Regulations 2018
-    "UGC_Regulations_2018": "https://nluo.ac.in/storage/2024/05/UGC-Regulations-2018-for-appointment-of-teachers-and-academic-staff.pdf",
-]
-
-# ----------- Fetch webpage ----------
 def fetch_webpage(url):
     try:
         response = requests.get(url, timeout=10)
@@ -71,7 +41,6 @@ def fetch_webpage(url):
         return ""
 
 
-# ----------- Fetch all policies (SOURCE AWARE) ----------
 def fetch_all_policies():
     data = {}
 
@@ -90,6 +59,7 @@ def fetch_all_policies():
         data[name] = clean_text(raw_text)
 
     return data
+
 
 
 # import os
