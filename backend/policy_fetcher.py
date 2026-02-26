@@ -6,10 +6,16 @@ HEADERS = {
 }
 
 OFFICIAL_SOURCES = {
-    "UGC": "https://www.ugc.gov.in/",
-    "AICTE": "https://www.aicte-india.org/",
-    "MOE": "https://www.education.gov.in/"
+    "AICTE_About": "https://www.aicte-india.org/about-us",
+    "AICTE_Schemes": "https://www.aicte-india.org/schemes",
+    "AICTE_Approval": "https://www.aicte-india.org/approval-process-handbook",
+
+    "UGC_About": "https://www.ugc.gov.in/page/About-UGC.aspx",
+    "UGC_Schemes": "https://www.ugc.gov.in/page/Schemes.aspx",
+
+    "MOE_About": "https://www.education.gov.in/en/about-ministry"
 }
+
 
 def clean_text(text):
     lines = text.split("\n")
