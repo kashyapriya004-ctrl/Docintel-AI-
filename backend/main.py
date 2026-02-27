@@ -8,46 +8,29 @@ from backend.chunker import chunk_text
 from backend.embeddings import create_embeddings, semantic_search
 
 
-# -----------------------------
-# Initialize OpenAI
-# -----------------------------
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
-# -----------------------------
-# Load Data on Startup (Live Web RAG)
-# -----------------------------
-print("Fetching live policy data...")
-
+print("Fetching and crawling policy data...")
 all_data = fetch_all_policies()
 
-combined_text = " ".join(all_data.values())
+chunks_by_source = {}
+embeddings_by_source = {}
 
-print("Chunking text...")
-chunks = chunk_text(combined_text)
-
-print("Creating embeddings...")
-embeddings = create_embeddings(chunks)
+for source, text in all_data.items():
+    chunks = chunk_text(text)
+    embeddings = create_embeddings(chunks)
+    chunks_by_source[source] = chunks
+    embeddings_by_source[source] = embeddings
 
 print("System Ready 🚀")
 
-
-# -----------------------------
-# FastAPI App
-# -----------------------------
 app = FastAPI()
 
 
-# -----------------------------
-# Request Model
-# -----------------------------
 class QuestionRequest(BaseModel):
     question: str
 
 
-# -----------------------------
-# Source Detection (Optional Filtering)
-# -----------------------------
 def detect_source(query):
     q = query.lower()
     if "aicte" in q:
@@ -59,28 +42,30 @@ def detect_source(query):
     return None
 
 
-# -----------------------------
-# MAIN ENDPOINT
-# -----------------------------
 @app.post("/")
 def ask_question(request: QuestionRequest):
 
     query = request.question
-
-    # Source-aware filtering
     source = detect_source(query)
 
-    if source and source in all_data:
-        text = all_data[source]
-        local_chunks = chunk_text(text)
-        local_embeddings = create_embeddings(local_chunks)
-        results = semantic_search(query, local_chunks, local_embeddings)
-    else:
+    if source and source in chunks_by_source:
+        chunks = chunks_by_source[source]
+        embeddings = embeddings_by_source[source]
         results = semantic_search(query, chunks, embeddings)
+        used_sources = [source]
+    else:
+        all_chunks = []
+        all_embeddings = []
+
+        for s in chunks_by_source:
+            all_chunks.extend(chunks_by_source[s])
+            all_embeddings.extend(embeddings_by_source[s])
+
+        results = semantic_search(query, all_chunks, all_embeddings)
+        used_sources = list(chunks_by_source.keys())
 
     context = "\n\n".join(results)
 
-    # GPT Answer Generation
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -100,9 +85,6 @@ def ask_question(request: QuestionRequest):
 
     return {
         "question": query,
-        "answer": final_answer
+        "answer": final_answer,
+        "sources_used": used_sources
     }
-
-
-
-
