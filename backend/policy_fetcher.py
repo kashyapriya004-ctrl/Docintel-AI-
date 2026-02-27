@@ -1,15 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+OFFICIAL_SOURCES = {
+    "UGC": "https://www.ugc.gov.in/",
+    "AICTE": "https://www.aicte-india.org/",
+    "MOE": "https://www.education.gov.in/"
+}
 
 def clean_text(text):
     lines = text.split("\n")
     clean_lines = []
 
     blacklist_keywords = [
-        "Follow Us", "Twitter", "Facebook",
-        "Instagram", "LinkedIn",
-        "Skip to", "Screen Reader",
+        "Follow Us", "Twitter", "Facebook", "Instagram",
+        "LinkedIn", "Skip to", "Screen Reader",
         "Text Size", "Contact Us"
     ]
 
@@ -24,16 +32,9 @@ def clean_text(text):
     return "\n".join(clean_lines)
 
 
-OFFICIAL_SOURCES = {
-    "UGC": "https://www.ugc.gov.in/",
-    "AICTE": "https://www.aicte-india.org/",
-    "MOE": "https://www.education.gov.in/"
-}
-
-
 def fetch_webpage(url):
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
         return response.text
     except Exception as e:
@@ -49,17 +50,17 @@ def fetch_all_policies():
         if not html:
             continue
 
-        soup = BeautifulSoup(html, "html.parser")
-        paragraphs = soup.find_all("p")
+        soup = BeautifulSoup(html, "lxml")
 
-        raw_text = ""
-        for p in paragraphs:
-            raw_text += p.get_text() + "\n"
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
 
-        data[name] = clean_text(raw_text)
+        text = soup.get_text(separator="\n")
+        cleaned = clean_text(text)
+
+        data[name] = cleaned
 
     return data
-
 
 
 # import os
